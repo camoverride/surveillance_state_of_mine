@@ -14,8 +14,8 @@ class VLCPlayer:
             "--no-video-title", "--avcodec-hw=none", "--network-caching=1000"
         )
         self.player = self.instance.media_player_new()
-        self.width = 640  # Set according to your stream resolution
-        self.height = 480
+        self.width = 640  # Temporary placeholder
+        self.height = 480  # Temporary placeholder
         self.frame_data = np.zeros((self.height, self.width, 4), dtype=np.uint8)
         self.frame_pointer = self.frame_data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8))
         self.setup_vlc()
@@ -51,6 +51,7 @@ class VLCPlayer:
     def get_frame(self):
         return np.copy(self.frame_data)
 
+
 if __name__ == "__main__":
     url_list = [
         "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
@@ -78,6 +79,9 @@ if __name__ == "__main__":
     player = VLCPlayer(url_list[0])
     player.start()
 
+    cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
+    cv2.setWindowProperty("Video Stream", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
     start_time = time.time()
     url_index = 0
 
@@ -85,6 +89,10 @@ if __name__ == "__main__":
         try:
             frame = player.get_frame()
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+
+            # Dynamically resize the frame to full screen
+            screen_height, screen_width = frame_rgb.shape[:2]
+            frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
             cv2.imshow("Video Stream", frame_rgb)
 
