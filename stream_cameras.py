@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import ctypes
 import time
+from screeninfo import get_monitors
 
 
 class VLCPlayer:
@@ -81,9 +82,10 @@ if __name__ == "__main__":
     cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Video Stream", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    # Retrieve screen dimensions
-    screen_width = cv2.getWindowImageRect("Video Stream")[2]
-    screen_height = cv2.getWindowImageRect("Video Stream")[3]
+    # Get screen dimensions using screeninfo
+    monitor = get_monitors()[0]  # Assuming a single monitor setup
+    screen_width = monitor.width
+    screen_height = monitor.height
 
     start_time = time.time()
     url_index = 0
