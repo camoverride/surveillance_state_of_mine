@@ -5,7 +5,6 @@ import ctypes
 import time
 
 
-
 class VLCPlayer:
     def __init__(self, url):
         # VLC instance with added network caching and no hardware acceleration
@@ -82,6 +81,9 @@ if __name__ == "__main__":
     cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Video Stream", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+    screen_width = cv2.getWindowImageRect("Video Stream")[2]
+    screen_height = cv2.getWindowImageRect("Video Stream")[3]
+
     start_time = time.time()
     url_index = 0
 
@@ -90,11 +92,10 @@ if __name__ == "__main__":
             frame = player.get_frame()
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
 
-            # Dynamically resize the frame to full screen
-            screen_height, screen_width = frame_rgb.shape[:2]
-            frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
+            # Resize the frame to fill the entire screen
+            resized_frame = cv2.resize(frame_rgb, (screen_width, screen_height))
 
-            cv2.imshow("Video Stream", frame_rgb)
+            cv2.imshow("Video Stream", resized_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
