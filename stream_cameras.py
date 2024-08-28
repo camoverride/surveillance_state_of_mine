@@ -5,6 +5,7 @@ import ctypes
 import time
 
 
+
 class VLCPlayer:
     def __init__(self, url):
         # VLC instance with added network caching and no hardware acceleration
@@ -51,25 +52,6 @@ class VLCPlayer:
         return np.copy(self.frame_data)
 
 
-def resize_to_fit_screen(frame, screen_width, screen_height):
-    # Get the aspect ratio of the frame and screen
-    frame_height, frame_width = frame.shape[:2]
-    frame_aspect_ratio = frame_width / frame_height
-    screen_aspect_ratio = screen_width / screen_height
-
-    # Determine the new dimensions to fit the screen while maintaining aspect ratio
-    if frame_aspect_ratio > screen_aspect_ratio:
-        new_width = screen_width
-        new_height = int(screen_width / frame_aspect_ratio)
-    else:
-        new_height = screen_height
-        new_width = int(screen_height * frame_aspect_ratio)
-
-    # Resize the frame
-    resized_frame = cv2.resize(frame, (new_width, new_height))
-    return resized_frame
-
-
 if __name__ == "__main__":
     url_list = [
         "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
@@ -100,9 +82,6 @@ if __name__ == "__main__":
     cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Video Stream", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    screen_width = cv2.getWindowImageRect("Video Stream")[2]
-    screen_height = cv2.getWindowImageRect("Video Stream")[3]
-
     start_time = time.time()
     url_index = 0
 
@@ -111,18 +90,11 @@ if __name__ == "__main__":
             frame = player.get_frame()
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
 
-            # Resize the frame to fit the screen
-            resized_frame = resize_to_fit_screen(frame_rgb, screen_width, screen_height)
+            # Dynamically resize the frame to full screen
+            screen_height, screen_width = frame_rgb.shape[:2]
+            frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
-            # Create a black image for the background
-            black_background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
-
-            # Center the resized frame in the black background
-            y_offset = (screen_height - resized_frame.shape[0]) // 2
-            x_offset = (screen_width - resized_frame.shape[1]) // 2
-            black_background[y_offset:y_offset+resized_frame.shape[0], x_offset:x_offset+resized_frame.shape[1]] = resized_frame
-
-            cv2.imshow("Video Stream", black_background)
+            cv2.imshow("Video Stream", frame_rgb)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
