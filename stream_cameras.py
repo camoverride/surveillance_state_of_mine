@@ -9,7 +9,7 @@ class VLCPlayer:
     def __init__(self, url):
         # VLC instance with added network caching and no hardware acceleration
         self.instance = vlc.Instance(
-            "--no-audio", "--no-xlib", "--video-title-show", 
+            "--no-audio", "--no-xlib", "--video-title-show",
             "--no-video-title", "--avcodec-hw=none", "--network-caching=1000"
         )
         self.player = self.instance.media_player_new()
@@ -24,7 +24,7 @@ class VLCPlayer:
         self.lock_cb = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p))(self.lock_cb)
         self.unlock_cb = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p))(self.unlock_cb)
         self.display_cb = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p)(self.display_cb)
-        
+
         self.player.video_set_callbacks(self.lock_cb, self.unlock_cb, self.display_cb, None)
         self.player.video_set_format("RV32", self.width, self.height, self.width * 4)
 
@@ -74,13 +74,14 @@ if __name__ == "__main__":
         "https://61e0c5d388c2e.streamlock.net/live/5_S_Washington_NS.stream/chunklist_w163265122.m3u8",
         "https://61e0c5d388c2e.streamlock.net/live/4_S_Jackson_NS.stream/chunklist_w789828686.m3u8"
     ]
-    
+
     player = VLCPlayer(url_list[0])
     player.start()
 
     cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Video Stream", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+    # Retrieve screen dimensions
     screen_width = cv2.getWindowImageRect("Video Stream")[2]
     screen_height = cv2.getWindowImageRect("Video Stream")[3]
 
@@ -93,9 +94,9 @@ if __name__ == "__main__":
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
 
             # Resize the frame to fill the entire screen
-            resized_frame = cv2.resize(frame_rgb, (screen_width, screen_height))
+            frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
-            cv2.imshow("Video Stream", resized_frame)
+            cv2.imshow("Video Stream", frame_rgb)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
