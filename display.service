@@ -1,0 +1,15 @@
+[Unit]
+Description=display surveillance cameras
+After=default.target
+
+[Service]
+Type=simple
+Restart=always
+WorkingDirectory=/home/pi/surveillance_state_of_mind
+ExecStart=/home/pi/surveillance_state_of_mind/.venv/bin/python /home/pi/surveillance_state_of_mind/stream_cameras.py
+StandardOutput=journal
+StandardError=journal
+Environment="PATH=/home/pi/surveillance_state_of_mind/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=default.target

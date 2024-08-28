@@ -1,9 +1,11 @@
+import os
 import vlc
 import numpy as np
 import cv2
 import ctypes
 import time
 from screeninfo import get_monitors
+
 
 
 class VLCPlayer:
@@ -53,6 +55,14 @@ class VLCPlayer:
 
 
 if __name__ == "__main__":
+
+    # Set the screen screen
+    os.environ["DISPLAY"] = ':0'
+
+    # Hide the mouse
+    os.system("unclutter -idle 0 &")
+
+
     url_list = [
         "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
         "https://61e0c5d388c2e.streamlock.net/live/2_Pike_NS.stream/chunklist_w144460210.m3u8",
