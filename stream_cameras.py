@@ -5,8 +5,10 @@ import cv2
 import ctypes
 import time
 from screeninfo import get_monitors
+from systemd import daemon
 
 from camera_info import url_list
+
 
 
 class VLCPlayer:
@@ -57,9 +59,10 @@ class VLCPlayer:
 
 
 def main():
-
-
     player = None
+
+    # Notify systemd that the service is starting
+    daemon.notify('READY=1')
 
     while True:
         try:
@@ -75,19 +78,23 @@ def main():
 
             start_time = time.time()
             url_index = 0
+            last_frame_time = time.time()
 
             while True:
                 try:
                     frame = player.get_frame()
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-
                     frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
                     cv2.imshow("Video Stream", frame_rgb)
 
+                    # Notify systemd watchdog that the service is alive
+                    daemon.notify('WATCHDOG=1')
+
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 
+                    # Switch to the next URL every 15 seconds
                     if time.time() - start_time >= 15:
                         player.stop()
                         url_index = (url_index + 1) % len(url_list)
@@ -110,6 +117,12 @@ def main():
             cv2.destroyAllWindows()
             if player:
                 player.stop()
+
+
+if __name__ == "__main__":
+    os.environ["DISPLAY"] = ':0'
+    os.system("unclutter -idle 0 &")
+    main()
 
 
 if __name__ == "__main__":

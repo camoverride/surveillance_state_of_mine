@@ -3,7 +3,10 @@
 
 ## Setup
 
+- `sudo apt-get update`
+- `sudo apt-get install libsystemd-dev`
 - `sudo apt-get install unclutter`
+
 - `python -m venv .venv`
 - `source .venv/bin/activate`
 - `pip install -r requirements.txt`
