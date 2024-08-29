@@ -31,3 +31,11 @@ Start the service using the commands below:
 Start it on boot: `sudo loginctl enable-linger pi`
 
 Get the logs: `journalctl --user -u display.service`
+
+
+## TODO
+
+- make sure it runs without freezing / restarts
+- add static when frames change
+- add config to determine frame time
+- add stream list to file

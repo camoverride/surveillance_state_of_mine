@@ -11,7 +11,9 @@ class VLCPlayer:
     def __init__(self, url):
         self.instance = vlc.Instance(
             "--no-audio", "--no-xlib", "--video-title-show",
-            "--no-video-title", "--avcodec-hw=none", "--network-caching=2000"  # Increased network caching
+            "--no-video-title", "--avcodec-hw=none",
+            "--network-caching=5000", "--clock-synchro=0", "--file-caching=5000",
+            "--ts-seek-percent", "--sout-ts-shaping=1"
         )
         self.player = self.instance.media_player_new()
         self.width = 640  # Temporary placeholder
@@ -53,9 +55,6 @@ class VLCPlayer:
 
 
 def main():
-    os.environ["DISPLAY"] = ':0'
-    os.system("unclutter -idle 0 &")
-
     url_list = [
         "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
         "https://61e0c5d388c2e.streamlock.net/live/2_Pike_NS.stream/chunklist_w144460210.m3u8",
@@ -112,7 +111,7 @@ def main():
                         player.stop()
                         url_index = (url_index + 1) % len(url_list)
                         player.set_media(url_list[url_index])
-                        time.sleep(2)  # Add a small delay to ensure the stream stabilizes
+                        time.sleep(2)  # Small delay to allow the stream to stabilize
                         player.start()
                         start_time = time.time()
 
@@ -124,7 +123,7 @@ def main():
             print(f"Outer loop error occurred: {e}")
             if player:
                 player.stop()
-            time.sleep(5)  # Wait before retrying
+            time.sleep(10)  # Increase the delay before retrying to allow recovery
 
         finally:
             cv2.destroyAllWindows()
@@ -133,4 +132,6 @@ def main():
 
 
 if __name__ == "__main__":
+    os.environ["DISPLAY"] = ':0'
+    os.system("unclutter -idle 0 &")
     main()
