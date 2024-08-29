@@ -22,9 +22,9 @@ Start a service and a timer with *systemd*. This will start the program when the
 
 Add a timer to restart systemd every 1 hour. Copy the contents of `display.timer` to `~/.config/systemd/user/display.timer`, then:
 
-- `sudo systemctl daemon-reload`
-- `sudo systemctl enable display.timer`
-- `sudo systemctl start display.timer`
+- `systemctl --user daemon-reload`
+- `systemctl --user enable display.timer`
+- `systemctl --user start display.timer`
 
 Then copy the contents of `display.service` into `~/.config/systemd/user/display.service`
 
@@ -39,7 +39,12 @@ Get the logs: `journalctl --user -u display.service`
 
 ## TODO
 
-- make sure it runs without freezing / restarts
-- add static when frames change
-- add config to determine frame time
-- add stream list to file
+- [ ] make sure it runs without freezing / restarts
+    - added `display.timer` to restart every hour (on the hour)
+    - tried adding hash function to check for changes, but it might be slow
+        - hash every frame vs hash a frame every 15 secs!
+
+
+- [ ] add static when frames change
+- [ ] add config to determine frame time
+- [ ] add stream list to file
