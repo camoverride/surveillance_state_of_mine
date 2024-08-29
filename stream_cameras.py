@@ -5,7 +5,8 @@ import cv2
 import ctypes
 import time
 from screeninfo import get_monitors
-from systemd import daemon
+from cysystemd.daemon import notify, Notification  # Updated import
+
 
 from camera_info import url_list
 
@@ -59,7 +60,7 @@ def main():
     player = None
 
     # Notify systemd that the service is starting
-    daemon.notify('READY=1')
+    notify(Notification.READY)  # Updated to use Notification.READY
 
     last_frame_time = time.time()
 
@@ -89,8 +90,8 @@ def main():
                     current_time = time.time()
 
                     # Check if the frame was processed within the last few seconds
-                    if current_time - last_frame_time <= 5:
-                        daemon.notify('WATCHDOG=1')
+                    if current_time - last_frame_time <= 10:
+                        notify(Notification.WATCHDOG)  # Updated to use Notification.WATCHDOG
                     last_frame_time = current_time
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
