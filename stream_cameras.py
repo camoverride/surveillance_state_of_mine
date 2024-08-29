@@ -11,7 +11,7 @@ class VLCPlayer:
     def __init__(self, url):
         self.instance = vlc.Instance(
             "--no-audio", "--no-xlib", "--video-title-show",
-            "--no-video-title", "--avcodec-hw=none", "--network-caching=1000"
+            "--no-video-title", "--avcodec-hw=none", "--network-caching=2000"  # Increased network caching
         )
         self.player = self.instance.media_player_new()
         self.width = 640  # Temporary placeholder
@@ -83,7 +83,6 @@ def main():
 
     while True:
         try:
-            # Initialize VLCPlayer
             player = VLCPlayer(url_list[0])
             player.start()
 
@@ -98,27 +97,31 @@ def main():
             url_index = 0
 
             while True:
-                frame = player.get_frame()
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+                try:
+                    frame = player.get_frame()
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
 
-                # Resize the frame to fill the entire screen
-                frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
+                    frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
-                cv2.imshow("Video Stream", frame_rgb)
+                    cv2.imshow("Video Stream", frame_rgb)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
 
-                # Switch video every 15 seconds
-                if time.time() - start_time >= 15:
-                    player.stop()
-                    url_index = (url_index + 1) % len(url_list)
-                    player.set_media(url_list[url_index])
-                    player.start()
-                    start_time = time.time()
+                    if time.time() - start_time >= 15:
+                        player.stop()
+                        url_index = (url_index + 1) % len(url_list)
+                        player.set_media(url_list[url_index])
+                        time.sleep(2)  # Add a small delay to ensure the stream stabilizes
+                        player.start()
+                        start_time = time.time()
+
+                except Exception as e:
+                    print(f"Inner loop error occurred: {e}")
+                    break  # Break the inner loop and restart
 
         except Exception as e:
-            print(f"Error occurred: {e}")
+            print(f"Outer loop error occurred: {e}")
             if player:
                 player.stop()
             time.sleep(5)  # Wait before retrying
