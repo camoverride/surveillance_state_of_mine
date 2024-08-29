@@ -4,8 +4,8 @@ import numpy as np
 import cv2
 import ctypes
 import time
+import zlib  # For CRC32
 from screeninfo import get_monitors
-
 
 class VLCPlayer:
     def __init__(self, url):
@@ -54,7 +54,23 @@ class VLCPlayer:
         return np.copy(self.frame_data)
 
 
+def hash_frame(frame, region_size=(100, 100)):
+    """Generates a CRC32 hash for a small region of the given frame."""
+    h, w = frame.shape[:2]
+    x_start = (w - region_size[0]) // 2
+    y_start = (h - region_size[1]) // 2
+
+    # Crop a small region from the center of the frame
+    region = frame[y_start:y_start + region_size[1], x_start:x_start + region_size[0]]
+    
+    # Convert to bytes and calculate CRC32
+    return zlib.crc32(region.tobytes())
+
+
 def main():
+    os.environ["DISPLAY"] = ':0'
+    os.system("unclutter -idle 0 &")
+
     url_list = [
         "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
         "https://61e0c5d388c2e.streamlock.net/live/2_Pike_NS.stream/chunklist_w144460210.m3u8",
@@ -79,6 +95,8 @@ def main():
     ]
 
     player = None
+    last_hash = None
+    last_change_time = time.time()
 
     while True:
         try:
@@ -99,10 +117,19 @@ def main():
                 try:
                     frame = player.get_frame()
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-
                     frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
                     cv2.imshow("Video Stream", frame_rgb)
+
+                    current_hash = hash_frame(frame_rgb)
+
+                    # Check if the frame has not changed for 15 seconds
+                    if current_hash != last_hash:
+                        last_hash = current_hash
+                        last_change_time = time.time()
+                    elif time.time() - last_change_time > 15:
+                        print("Frame has not changed for 15 seconds. Restarting.")
+                        raise Exception("Frame freeze detected")
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
@@ -111,7 +138,7 @@ def main():
                         player.stop()
                         url_index = (url_index + 1) % len(url_list)
                         player.set_media(url_list[url_index])
-                        time.sleep(2)  # Small delay to allow the stream to stabilize
+                        time.sleep(2)  # Allow stream to stabilize
                         player.start()
                         start_time = time.time()
 
@@ -123,15 +150,9 @@ def main():
             print(f"Outer loop error occurred: {e}")
             if player:
                 player.stop()
-            time.sleep(10)  # Increase the delay before retrying to allow recovery
+            time.sleep(10)  # Delay before retrying
 
         finally:
             cv2.destroyAllWindows()
             if player:
                 player.stop()
-
-
-if __name__ == "__main__":
-    os.environ["DISPLAY"] = ':0'
-    os.system("unclutter -idle 0 &")
-    main()

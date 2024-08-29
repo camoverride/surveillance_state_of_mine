@@ -5,6 +5,7 @@ After=default.target
 [Service]
 Type=simple
 Restart=always
+RestartSec=10
 WorkingDirectory=/home/pi/surveillance_state_of_mind
 ExecStart=/home/pi/surveillance_state_of_mind/.venv/bin/python /home/pi/surveillance_state_of_mind/stream_cameras.py
 StandardOutput=journal

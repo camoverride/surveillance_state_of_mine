@@ -16,13 +16,17 @@
 
 ## Run in Production
 
-Start a service with *systemd*. This will start the program when the computer starts and revive it when it dies:
+Start a service and a timer with *systemd*. This will start the program when the computer starts and revive it when it dies:
 
 - `mkdir -p ~/.config/systemd/user`
 
-- Paste the contents of `display.service` into `~/.config/systemd/user/display.service`
+Add a timer to restart systemd every 1 hour. Copy the contents of `display.timer` to `~/.config/systemd/user/display.timer`, then:
 
-Start the service using the commands below:
+- `sudo systemctl daemon-reload`
+- `sudo systemctl enable display.timer`
+- `sudo systemctl start display.timer`
+
+Then copy the contents of `display.service` into `~/.config/systemd/user/display.service`
 
 - `systemctl --user daemon-reload`
 - `systemctl --user enable display.service`
