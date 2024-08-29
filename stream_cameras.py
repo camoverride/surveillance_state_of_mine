@@ -9,8 +9,6 @@ from systemd import daemon
 
 from camera_info import url_list
 
-
-
 class VLCPlayer:
     def __init__(self, url):
         self.instance = vlc.Instance(
@@ -57,12 +55,13 @@ class VLCPlayer:
     def get_frame(self):
         return np.copy(self.frame_data)
 
-
 def main():
     player = None
 
     # Notify systemd that the service is starting
     daemon.notify('READY=1')
+
+    last_frame_time = time.time()
 
     while True:
         try:
@@ -78,7 +77,6 @@ def main():
 
             start_time = time.time()
             url_index = 0
-            last_frame_time = time.time()
 
             while True:
                 try:
@@ -88,20 +86,24 @@ def main():
 
                     cv2.imshow("Video Stream", frame_rgb)
 
-                    # Notify systemd watchdog that the service is alive
-                    daemon.notify('WATCHDOG=1')
+                    current_time = time.time()
+
+                    # Check if the frame was processed within the last few seconds
+                    if current_time - last_frame_time <= 5:
+                        daemon.notify('WATCHDOG=1')
+                    last_frame_time = current_time
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 
                     # Switch to the next URL every 15 seconds
-                    if time.time() - start_time >= 15:
+                    if current_time - start_time >= 15:
                         player.stop()
                         url_index = (url_index + 1) % len(url_list)
                         player.set_media(url_list[url_index])
                         time.sleep(2)  # Small delay to allow the stream to stabilize
                         player.start()
-                        start_time = time.time()
+                        start_time = current_time
 
                 except Exception as e:
                     print(f"Inner loop error occurred: {e}")
@@ -117,13 +119,6 @@ def main():
             cv2.destroyAllWindows()
             if player:
                 player.stop()
-
-
-if __name__ == "__main__":
-    os.environ["DISPLAY"] = ':0'
-    os.system("unclutter -idle 0 &")
-    main()
-
 
 if __name__ == "__main__":
     os.environ["DISPLAY"] = ':0'

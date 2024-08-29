@@ -10,7 +10,7 @@ WorkingDirectory=/home/pi/surveillance_state_of_mind
 ExecStart=/home/pi/surveillance_state_of_mind/.venv/bin/python /home/pi/surveillance_state_of_mind/stream_cameras.py
 StandardOutput=journal
 StandardError=journal
-WatchdogSec=30  # Watchdog timeout (30 seconds)
+WatchdogSec=30
 Environment="PATH=/home/pi/surveillance_state_of_mind/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 [Install]
