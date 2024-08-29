@@ -40,11 +40,11 @@ Get the logs: `journalctl --user -u display.service`
 ## TODO
 
 - [ ] make sure it runs without freezing / restarts
-    - added `display.timer` to restart every hour (on the hour)
+    - added `display.timer` to restart every hour (on the hour) -- DISABLED THIS
     - tried adding hash function to check for changes, but it might be slow
         - hash every frame vs hash a frame every 15 secs!
 
 
 - [ ] add static when frames change
 - [ ] add config to determine frame time
-- [ ] add stream list to file
+- [X] add stream list to file

@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 import ctypes
 import time
-import zlib  # For CRC32
 from screeninfo import get_monitors
 
 from camera_info import url_list
@@ -57,25 +56,10 @@ class VLCPlayer:
         return np.copy(self.frame_data)
 
 
-def hash_frame(frame, region_size=(100, 100)):
-    """Generates a CRC32 hash for a small region of the given frame."""
-    h, w = frame.shape[:2]
-    x_start = (w - region_size[0]) // 2
-    y_start = (h - region_size[1]) // 2
-
-    # Crop a small region from the center of the frame
-    region = frame[y_start:y_start + region_size[1], x_start:x_start + region_size[0]]
-    
-    # Convert to bytes and calculate CRC32
-    return zlib.crc32(region.tobytes())
-
-
 def main():
 
 
     player = None
-    last_hash = None
-    last_change_time = time.time()
 
     while True:
         try:
@@ -100,16 +84,6 @@ def main():
                     frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
                     cv2.imshow("Video Stream", frame_rgb)
-
-                    current_hash = hash_frame(frame_rgb)
-
-                    # Check if the frame has not changed for 15 seconds
-                    if current_hash != last_hash:
-                        last_hash = current_hash
-                        last_change_time = time.time()
-                    elif time.time() - last_change_time > 15:
-                        print("Frame has not changed for 15 seconds. Restarting.")
-                        raise Exception("Frame freeze detected")
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
