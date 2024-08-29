@@ -1,3 +1,4 @@
+import os
 import vlc
 import numpy as np
 import cv2
@@ -51,14 +52,19 @@ class VLCPlayer:
     def get_frame(self):
         return np.copy(self.frame_data)
 
+
 def watchdog(thread, interval=10):
     while True:
         time.sleep(interval)
         if not thread.is_alive():
             print("Video processing thread has frozen. Restarting...")
-            main()  # Restart the entire process
+            os.execv(__file__, ['python3'] + sys.argv)  # Restart the script
+
 
 def main():
+    os.environ["DISPLAY"] = ':0'
+    os.system("unclutter -idle 0 &")
+
     url_list = [
         "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
         "https://61e0c5d388c2e.streamlock.net/live/2_Pike_NS.stream/chunklist_w144460210.m3u8",
@@ -88,8 +94,7 @@ def main():
     cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Video Stream", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    # Get screen dimensions using screeninfo
-    monitor = get_monitors()[0]  # Assuming a single monitor setup
+    monitor = get_monitors()[0]
     screen_width = monitor.width
     screen_height = monitor.height
 
@@ -102,7 +107,6 @@ def main():
                 frame = player.get_frame()
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
 
-                # Resize the frame to fill the entire screen
                 frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
                 cv2.imshow("Video Stream", frame_rgb)
@@ -110,17 +114,15 @@ def main():
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
-                # Switch video every 15 seconds
                 if time.time() - start_time >= 15:
                     player.stop()
-                    url_index = (url_index + 1) % len(url_list)  # Move to the next URL
+                    url_index = (url_index + 1) % len(url_list)
                     player.set_media(url_list[url_index])
                     player.start()
                     start_time = time.time()
 
             except Exception as e:
                 print(f"Error occurred: {e}")
-                # Restart the player if an error occurs
                 player.stop()
                 player.set_media(url_list[url_index])
                 player.start()
@@ -128,11 +130,9 @@ def main():
         cv2.destroyAllWindows()
         player.stop()
 
-    # Run the video loop in a separate thread
     video_thread = threading.Thread(target=video_loop)
     video_thread.start()
 
-    # Watchdog to restart the loop if it freezes
     watchdog(video_thread)
 
 
