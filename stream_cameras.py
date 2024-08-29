@@ -4,8 +4,10 @@ import numpy as np
 import cv2
 import ctypes
 import time
+import zlib  # For CRC32
 from screeninfo import get_monitors
 
+from camera_info import url_list
 
 
 class VLCPlayer:
@@ -55,31 +57,25 @@ class VLCPlayer:
         return np.copy(self.frame_data)
 
 
+def hash_frame(frame, region_size=(100, 100)):
+    """Generates a CRC32 hash for a small region of the given frame."""
+    h, w = frame.shape[:2]
+    x_start = (w - region_size[0]) // 2
+    y_start = (h - region_size[1]) // 2
+
+    # Crop a small region from the center of the frame
+    region = frame[y_start:y_start + region_size[1], x_start:x_start + region_size[0]]
+    
+    # Convert to bytes and calculate CRC32
+    return zlib.crc32(region.tobytes())
+
+
 def main():
-    url_list = [
-        "https://61e0c5d388c2e.streamlock.net/live/QAnne_N_Roy_NS.stream/chunklist_w80172027.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/2_Pike_NS.stream/chunklist_w144460210.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/5_Pike_NS.stream/chunklist_w1546202334.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/Broadway_E_Pike_EW.stream/chunklist_w525067259.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/23_Union_NS.stream/chunklist_w2126376810.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/Aurora_N_46_NS.stream/chunklist_w701844251.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/Stewart_Denny_EW.stream/chunklist_w477619834.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/3_N_Denny_EW.stream/chunklist_w1935047884.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/9_Pine_EW.stream/chunklist_w1290193883.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/5_Battery_East.stream/chunklist_w1120770203.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/3_Wall_NS.stream/chunklist_w454112638.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/1_Broad_NS.stream/chunklist_w505604715.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/8_Howell_EW.stream/chunklist_w1165616740.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/4_Virginia_EW.stream/chunklist_w23008384.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/6_Pine_EW.stream/chunklist_w1996305817.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/1_Seneca_EW.stream/chunklist_w901636604.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/1_Madison_NS.stream/chunklist_w1918683447.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/2_Marion_NS.stream/chunklist_w718268251.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/5_S_Washington_NS.stream/chunklist_w163265122.m3u8",
-        "https://61e0c5d388c2e.streamlock.net/live/4_S_Jackson_NS.stream/chunklist_w789828686.m3u8"
-    ]
+
 
     player = None
+    last_hash = None
+    last_change_time = time.time()
 
     while True:
         try:
@@ -104,6 +100,16 @@ def main():
                     frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
 
                     cv2.imshow("Video Stream", frame_rgb)
+
+                    current_hash = hash_frame(frame_rgb)
+
+                    # Check if the frame has not changed for 15 seconds
+                    if current_hash != last_hash:
+                        last_hash = current_hash
+                        last_change_time = time.time()
+                    elif time.time() - last_change_time > 15:
+                        print("Frame has not changed for 15 seconds. Restarting.")
+                        raise Exception("Frame freeze detected")
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
