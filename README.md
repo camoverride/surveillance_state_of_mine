@@ -21,13 +21,13 @@
 
 Start a service and a timer with *systemd*. This will start the program when the computer starts and revive it when it dies:
 
-- `mkdir -p ~/.config/systemd/user`
+<!-- - `mkdir -p ~/.config/systemd/user`
 
 Add a timer to restart systemd every 1 hour. Copy the contents of `display.timer` to `~/.config/systemd/user/display.timer`, then:
 
 - `systemctl --user daemon-reload`
 - `systemctl --user enable display.timer`
-- `systemctl --user start display.timer`
+- `systemctl --user start display.timer` -->
 
 Then copy the contents of `display.service` into `~/.config/systemd/user/display.service`
 
