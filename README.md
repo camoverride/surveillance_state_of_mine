@@ -35,9 +35,14 @@ Then copy the contents of `display.service` into `~/.config/systemd/user/display
 - `systemctl --user enable display.service`
 - `systemctl --user start display.service`
 
-Start it on boot: `sudo loginctl enable-linger pi`
+Start it on boot:
+- `sudo loginctl enable-linger pi`
 
-Get the logs: `journalctl --user -u display.service`
+Get the status:
+- `systemctl --user status display.service`
+
+Get the logs:
+- `journalctl --user -u display.service`
 
 
 ## TODO

@@ -1,3 +1,4 @@
+cysystemd==1.6.2
 numpy==2.1.0
 opencv-python==4.10.0.84
 python-vlc==3.0.20123
