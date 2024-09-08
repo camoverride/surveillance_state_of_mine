@@ -81,6 +81,9 @@ def main():
 
             while True:
                 try:
+                    # Notify the watchdog
+                    notify(Notification.WATCHDOG)
+
                     frame = player.get_frame()
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
                     frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
@@ -88,11 +91,6 @@ def main():
                     cv2.imshow("Video Stream", frame_rgb)
 
                     current_time = time.time()
-
-                    # Check if the frame was processed within the last few seconds
-                    if current_time - last_frame_time <= 10:
-                        notify(Notification.WATCHDOG)  # Updated to use Notification.WATCHDOG
-                    last_frame_time = current_time
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
