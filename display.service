@@ -3,7 +3,8 @@ Description=display surveillance cameras
 After=default.target
 
 [Service]
-Type=simple
+Type=notify
+NotifyAccess=all
 Restart=always
 RestartSec=10
 WorkingDirectory=/home/pi/surveillance_state_of_mind
