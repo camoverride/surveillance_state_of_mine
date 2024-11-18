@@ -57,16 +57,12 @@ class VLCPlayer:
         return np.copy(self.frame_data)
 
 def main():
-    player = None
-
-    # Notify systemd that the service is starting
-    notify(Notification.READY)  # Updated to use Notification.READY
-
-    last_frame_time = time.time()
+    notify(Notification.READY)  # Notify systemd that the service has started
+    url_index = 0
 
     while True:
         try:
-            player = VLCPlayer(url_list[0])
+            player = VLCPlayer(url_list[url_index])
             player.start()
 
             cv2.namedWindow("Video Stream", cv2.WND_PROP_FULLSCREEN)
@@ -76,48 +72,52 @@ def main():
             screen_width = monitor.width
             screen_height = monitor.height
 
+            consecutive_failures = 0  # Count consecutive failures
             start_time = time.time()
-            url_index = 0
 
             while True:
                 try:
-                    # Notify the watchdog
-                    notify(Notification.WATCHDOG)
-
+                    # Attempt to get and display a frame
                     frame = player.get_frame()
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
                     frame_rgb = cv2.resize(frame_rgb, (screen_width, screen_height))
-
                     cv2.imshow("Video Stream", frame_rgb)
 
-                    current_time = time.time()
-
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                    # Reset failure counter on success and notify the watchdog
+                    consecutive_failures = 0
+                    notify(Notification.WATCHDOG)
 
                     # Switch to the next URL every 15 seconds
+                    current_time = time.time()
                     if current_time - start_time >= 15:
                         player.stop()
                         url_index = (url_index + 1) % len(url_list)
                         player.set_media(url_list[url_index])
-                        time.sleep(2)  # Small delay to allow the stream to stabilize
+                        time.sleep(2)  # Small delay for stream stabilization
                         player.start()
                         start_time = current_time
 
+                    # Exit on 'q' key press
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+
                 except Exception as e:
-                    print(f"Inner loop error occurred: {e}")
-                    break  # Break the inner loop and restart
+                    print(f"Stream processing error: {e}")
+                    consecutive_failures += 1
+
+                    # Stop sending watchdog notifications after 5 consecutive failures
+                    if consecutive_failures > 5:
+                        print("Too many VLC failures. Stopping watchdog notifications.")
+                        return
 
         except Exception as e:
             print(f"Outer loop error occurred: {e}")
-            if player:
-                player.stop()
-            time.sleep(10)  # Increase the delay before retrying to allow recovery
-
+            time.sleep(10)  # Delay before retrying
         finally:
-            cv2.destroyAllWindows()
             if player:
                 player.stop()
+            cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     os.environ["DISPLAY"] = ':0'

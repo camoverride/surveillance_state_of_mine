@@ -1,0 +1,14 @@
+[Unit]
+Description=Reboot the system if no watchdog notification is received
+After=multi-user.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+WatchdogSec=60  # Reboot if no notification is received in 60 seconds
+ExecStart=/sbin/shutdown -r now
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
