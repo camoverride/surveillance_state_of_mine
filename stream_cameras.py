@@ -82,7 +82,7 @@ def main():
             while True:
                 try:
                     # Notify the watchdog
-                    # notify(Notification.WATCHDOG)
+                    notify(Notification.WATCHDOG)
 
                     frame = player.get_frame()
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
